@@ -1,0 +1,142 @@
+<rating-widget>
+    <h1>Rating Widget</h1>
+    <noscript>
+        <form action="https://httpbin.org/post" method="POST">
+            <label for="rating">How satisfied are you?</label>
+            <input type="number" id="rating" name="rating" min="1" max="5" value="1" required>
+            <button type="submit">Submit</button>
+        </form>
+    </noscript>
+    <form action="https://httpbin.org/post" method="POST" id="ratingForm" style="display: none;">
+        <label for="starRating">How satisfied are you?</label>
+        <div class="star-rating" id="starRating">
+            <!-- Five star icons go here -->
+            <span class="star" data-value="1">&#9733;</span>
+            <span class="star" data-value="2">&#9733;</span>
+            <span class="star" data-value="3">&#9733;</span>
+            <span class="star" data-value="4">&#9733;</span>
+            <span class="star" data-value="5">&#9733;</span>
+        </div>
+        <input type="hidden" name="question" value="How satisfied are you?">
+        <input type="hidden" name="sentBy" value="HTML">
+        <input type="hidden" id="rating" name="rating" value="1" required>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="theme-picker">
+        <label for="selected-color">Selected Star Color:</label>
+        <input type="color" id="selected-color" onchange="updateStarColor(this.value, 'selected')">
+
+        <label for="unselected-color">Unselected Star Color:</label>
+        <input type="color" id="unselected-color" onchange="updateStarColor(this.value, 'unselected')">
+    </div>
+
+    <style>
+        :root {
+            --star-selected-color: gold;
+            /* Default color for selected stars */
+            --star-unselected-color: gray;
+            /* Default color for unselected stars */
+            --star-symbol: "\2605";
+            /* Default star symbol (★) */
+        }
+
+
+        .star {
+            color: var(--star-unselected-color);
+            /* Use variable for unselected color */
+            cursor: pointer;
+            font-size: 24px;
+            /* Example size, adjust as needed */
+        }
+
+        .star.selected {
+            color: var(--star-selected-color);
+            /* Use variable for selected color */
+        }
+
+
+        #starRating {
+            display: none;
+            /* Hide the star rating initially */
+            justify-content: center;
+        }
+    </style>
+
+    <script>
+        // Function to update the star rating display
+        function updateStarRating(value, stars) {
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                star.classList.toggle('selected', starValue <= value);
+            });
+        }
+
+        // Show star rating and form when JavaScript is enabled
+        document.getElementById('starRating').style.display = 'block';
+        document.getElementById('ratingForm').style.display = 'block';
+
+        // Event listeners for stars
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('rating');
+
+        stars.forEach(star => {
+            // Hover effect
+            star.addEventListener('mouseover', () => {
+                const value = parseInt(star.getAttribute('data-value'));
+                updateStarRating(value, stars);
+            });
+
+            // Reset to the selected rating on mouse out
+            star.addEventListener('mouseout', () => {
+                updateStarRating(ratingInput.value, stars);
+            });
+
+            // Click to set the rating
+            star.addEventListener('click', () => {
+                const value = parseInt(star.getAttribute('data-value'));
+                ratingInput.value = value;
+                updateStarRating(value, stars);
+            });
+        });
+
+        // Add event listener for form submission
+        document.getElementById('ratingForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            formData.set('sentBy', 'JS'); // Update form value for JS
+
+            fetch('https://httpbin.org/post', {
+                method: 'POST',
+                headers: {
+                    'X-Sent-By': 'JS' // Custom header
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
+
+            // Display a message based on the rating value
+            displayRatingMessage(ratingInput.value);
+        });
+
+        function displayRatingMessage(value) {
+            const maxRating = 5; // Adjust this value based on your max rating
+            const percentage = (value / maxRating) * 100;
+            const message = percentage >= 80 ?
+                `Thanks for ${value} star rating!` :
+                `Thank you for your feedback of ${value} stars. We'll do better.`;
+            alert(message); // or display this message in the UI
+        }
+
+        function updateStarColor(color, type) {
+            if (type === 'selected') {
+                document.documentElement.style.setProperty('--star-selected-color', color);
+            } else {
+                document.documentElement.style.setProperty('--star-unselected-color', color);
+            }
+        }
+    </script>
+
+</rating-widget>

@@ -1,0 +1,86 @@
+<weather-widget>
+  <style>
+    #weather-widget {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 300px;
+      margin: 50px auto;
+    }
+
+    #weather-widget img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    #weather-widget .unavailable {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+
+  <noscript>
+    <div id="weather-widget">
+      <p class="unavailable">Current Weather Conditions Unavailable</p>
+    </div>
+  </noscript>
+
+  <div id="weather-widget">
+    <!-- Dynamic content will be loaded here -->
+  </div>
+
+  <script>
+    class WeatherWidget extends HTMLElement {
+      connectedCallback() {
+        this.innerHTML = `
+                  <h1>Current Weather</h1>
+                  <div id="weather-widget">
+                      <img id="weather-icon" alt="Weather Icon">
+                      <p id="temperature"></p>
+                      <p id="conditions"></p>
+                  </div>
+              `;
+
+        this.loadWeather();
+      }
+
+      loadWeather() {
+        const weatherWidget = this.querySelector('#weather-widget');
+
+        if ('fetch' in window) {
+          fetch('https://api.weather.gov/points/32.8801,-117.2340')
+            .then(response => response.json())
+            .then(data => {
+              const forecastURL = data.properties.forecast;
+              return fetch(forecastURL);
+            })
+            .then(response => response.json())
+            .then(data => {
+              const temperature = data.properties.periods[0].temperature;
+              const conditions = data.properties.periods[0].shortForecast;
+              const iconURL = data.properties.periods[0].icon;
+
+              const iconElement = this.querySelector('#weather-icon');
+              const temperatureElement = this.querySelector('#temperature');
+              const conditionsElement = this.querySelector('#conditions');
+
+              iconElement.src = iconURL;
+              temperatureElement.textContent = `Temperature: ${temperature}°F`;
+              conditionsElement.textContent = `Conditions: ${conditions}`;
+            })
+            .catch(error => {
+              console.error('Error fetching weather data:', error);
+              weatherWidget.innerHTML = '<p class="unavailable">Current Weather Conditions Unavailable</p>';
+            });
+        } else {
+          weatherWidget.innerHTML = '<p class="unavailable">JavaScript is disabled. Weather widget not available.</p>';
+        }
+      }
+    }
+
+    customElements.define('weather-widget', WeatherWidget);
+  </script>
+</weather-widget>
